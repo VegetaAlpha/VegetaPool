@@ -1,0 +1,17 @@
+{
+    "name": "VegetaSystem.Pool.Samples.Addressables",
+    "rootNamespace": "",
+    "references": [
+        "VegetaSystem.Pool",
+        "Unity.Addressables"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

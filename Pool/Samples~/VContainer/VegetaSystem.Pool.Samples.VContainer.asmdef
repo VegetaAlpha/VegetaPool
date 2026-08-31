@@ -1,0 +1,17 @@
+{
+    "name": "VegetaSystem.Pool.Samples.VContainer",
+    "rootNamespace": "",
+    "references": [
+        "VegetaSystem.Pool",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

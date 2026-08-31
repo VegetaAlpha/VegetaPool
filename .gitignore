@@ -75,3 +75,13 @@ crashlytics-build.properties
 /.vscode/*
 Headless_Server/Build/*
 !Headless_Server/Build/readme.txt
+
+# OS / IDE / crash dumps
+.DS_Store
+*.slnx
+mono_crash.*.json
+
+# Unity ships package samples in folders ending with "~". A global "*~" editor-backup
+# rule (see ~/.gitignore_global) would silently swallow them — re-include explicitly.
+!Samples~/
+!Samples~/**

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49300d1ffee78456bb06e8ece275c0a6, type: 3}
+  m_Name: Sphere
+  m_EditorClassIdentifier: VegetaSystem.Pool::VegetaSystem.SO_PoolData
+  Mode: 1
+  Prefab: {fileID: 0}
+  InitAmount: 0
+  PoolItems:
+  - Prefab: {fileID: 410925239445057487, guid: a31af50f0c3bd6f4ab3511b946396310, type: 3}
+    InitAmount: 0
+  - Prefab: {fileID: 5633379853191335367, guid: 9f697fa82f03b2a448b0173c25892b06, type: 3}
+    InitAmount: 0
