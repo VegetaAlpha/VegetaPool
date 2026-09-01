@@ -19,12 +19,12 @@
     "samples": [
         {
             "displayName": "Static Pool Demo",
-            "description": "Runnable scene: buttons spawning cubes and colour-keyed spheres through the static Pool facade, with an SO_AllPoolData config. No dependencies.",
+            "description": "Runnable scene: buttons spawning cubes and colour-keyed spheres through the static Pool facade, with an SO_AllPoolData config. Needs TMP Essential Resources imported (Window > TextMeshPro).",
             "path": "Samples~/StaticPool"
         },
         {
             "displayName": "VContainer Pool Demo",
-            "description": "The same scene wired through a VContainer LifetimeScope instead, including an ISpawner backed by IObjectResolver.Instantiate. Install jp.hadashikick.vcontainer BEFORE importing.",
+            "description": "The same scene wired through a VContainer LifetimeScope instead, including an ISpawner backed by IObjectResolver.Instantiate. Install jp.hadashikick.vcontainer BEFORE importing, and import TMP Essential Resources (Window > TextMeshPro).",
             "path": "Samples~/VContainerPool"
         }
     ]

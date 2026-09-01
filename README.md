@@ -35,8 +35,12 @@ unresolved and the sample assembly fails to compile. Install it the same way —
 https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer
 ```
 
-> Samples land in `Assets/Samples/VegetaPool/<version>/`. Open one demo scene at a time — running
-> both in a single Play session trips the [mode guard](#the-two-modes-are-mutually-exclusive).
+> - **Both demo scenes need TMP Essential Resources.** Their buttons use TextMeshPro, whose font
+>   assets live in `Assets/TextMesh Pro/` per project, not in any package. Without them the buttons
+>   render but the labels are blank and the console logs `Can't Generate Mesh, No Font Asset has
+>   been assigned`. Fix: **Window → TextMeshPro → Import TMP Essential Resources**.
+> - Samples land in `Assets/Samples/VegetaPool/<version>/`. Open one demo scene at a time — running
+>   both in a single Play session trips the [mode guard](#the-two-modes-are-mutually-exclusive).
 
 ## One class, two ways to reach it
 
