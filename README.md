@@ -1,6 +1,6 @@
 # VegetaPool
 
-Object pooling for Unity. No dependencies. Static facade or injected instance — same API.
+Object pooling for Unity. No dependencies.
 
 ```
 https://github.com/VegetaAlpha/VegetaPool.git?path=Pool
@@ -8,6 +8,20 @@ https://github.com/VegetaAlpha/VegetaPool.git?path=Pool
 
 Package Manager → **+** → **Install package from git URL…** · Unity 2022.3+ · no tags yet, so this
 tracks `main`.
+
+### One class, two ways to reach it
+
+Everything lives on **`PoolSystem`**. `Pool` is a static facade that forwards every call to one
+hidden `PoolSystem` instance.
+
+```csharp
+Pool.GetObj<Bullet>();      // static facade
+pool.GetObj<Bullet>();      // your own instance
+```
+
+**The API is identical.** Sections 1–5 below are written as `pool.X` and apply to both — read them
+as `Pool.X` if you use the static side. [Section 6](#6-static-vs-injected) covers setup and the
+handful of things that actually differ.
 
 ---
 
@@ -49,40 +63,7 @@ public class Sphere : MonoBehaviour, ISubKeyPoolable
 
 ---
 
-## 2. Pick a mode
-
-**Static:**
-
-```csharp
-Pool.Register(bulletPrefab, initAmount: 20);
-var bullet = Pool.GetObj<Bullet>();
-```
-
-**Injected:**
-
-```csharp
-builder.Register<ISpawner, VContainerSpawner>(Lifetime.Singleton);
-builder.Register<PoolSystem>(Lifetime.Singleton).AsSelf();
-```
-
-```csharp
-[Inject] public void Construct(PoolSystem pool) => this.pool = pool;
-var bullet = pool.GetObj<Bullet>();
-```
-
-> **The two modes are mutually exclusive** — using both throws `InvalidOperationException` instead
-> of silently giving you two disconnected pools. Several *injected* pools are fine.
->
-> The claim resets on domain reload. If you turn off **Reload Domain** in *Enter Play Mode
-> Options*, it survives between Play sessions and your second run throws.
-
-Need the instance from the static side: `Pool.GetPoolSystem()`.
-
----
-
-## 3. API
-
-`Pool.X` forwards to the identical `pool.X`.
+## 2. The API
 
 | | |
 |---|---|
@@ -90,18 +71,30 @@ Need the instance from the static side: `Pool.GetPoolSystem()`.
 | `GetObj<T>()` | `IPoolable` |
 | `GetObj<T>(subKey)` | `ISubKeyPoolable` |
 | `ReleaseObj(obj, ignoreParentPool = false, worldPosStay = true)` | Back to the pool |
-| `DestroyPool<T>()` / `DestroyPool<T>(subKey)` | Destroy one type / one variant |
-| `DestroyAllPools()` | Destroy everything |
-
-> `GetObj` **returns `null`, it does not throw**, when nothing is registered. It logs
-> `Pool config not found: <Type>/<subKey>` first.
-
----
-
-## 4. Release — two ways
+| `DestroyPool<T>()` | One type, every subKey |
+| `DestroyPool<T>(subKey)` | One variant |
+| `DestroyAllPools()` | Everything |
 
 ```csharp
-Pool.ReleaseObj(bullet);      // or pool.ReleaseObj(bullet)
+pool.Register(bulletPrefab, initAmount: 20);
+pool.Register(redSpherePrefab, 10);              // subKey comes from GetSubKeyPool()
+
+var bullet = pool.GetObj<Bullet>();
+var red    = pool.GetObj<Sphere>(SphereType.Red.ToString());
+
+pool.ReleaseObj(bullet);
+pool.DestroyPool<Bullet>();
+```
+
+> - `GetObj` **returns `null`, it does not throw**, when nothing is registered. It logs
+>   `Pool config not found: <Type>/<subKey>` first.
+> - `ignoreParentPool: true` leaves a released object where it is in the hierarchy instead of
+>   re-parenting it under the pool container.
+
+### Release — two ways
+
+```csharp
+pool.ReleaseObj(bullet);      // from a spawner or controller
 ```
 
 ```csharp
@@ -109,18 +102,21 @@ this.Release();               // from inside the object, no pool reference neede
 bullet.Release();             // same extension, from outside
 ```
 
-| | `ReleaseObj(obj)` | `this.Release()` |
+| | `pool.ReleaseObj(obj)` | `this.Release()` |
 |---|---|---|
 | Needs a pool reference | yes | no |
 | Cost | dictionary lookup | one `GetComponent` |
 | Use for | spawners, controllers | self-expiring objects, effects, projectiles |
+
+`Release()` works in both modes: each instance carries an internal tracker recording which
+`PoolSystem` spawned it, so it routes correctly even with several pools alive.
 
 > Releasing twice is safe. Releasing something that never came from a pool logs a warning and does
 > nothing.
 
 ---
 
-## 5. Supplying prefabs
+## 3. Supplying prefabs
 
 `Register()` takes a `Component` — **where it came from is your business.** ScriptableObject,
 Addressables, `Resources.Load`, a factory, a plain field: all fine. Only the first is built in.
@@ -133,11 +129,7 @@ entry is `Single` (one `IPoolable`) or `Multiple` (a list of `ISubKeyPoolable` v
 ```csharp
 [SerializeField] private SO_AllPoolData poolConfig;
 
-private void Awake() => poolConfig.ApplyTo(Pool.GetPoolSystem());   // static
-```
-
-```csharp
-[Inject] public void Construct(PoolSystem pool) => poolConfig.ApplyTo(pool);   // injected
+poolConfig.ApplyTo(pool);     // walks the list calling Register()
 ```
 
 ### Everything else — you write it
@@ -158,8 +150,8 @@ public static class AddressablePoolLoader
 ```
 
 ```csharp
-await Pool.GetPoolSystem().RegisterAsync<Bullet>("bullet_basic", 20);
-var bullet = Pool.GetObj<Bullet>();
+await pool.RegisterAsync<Bullet>("bullet_basic", 20);
+var bullet = pool.GetObj<Bullet>();
 ```
 
 > - **Await before the first `GetObj`.** Registration is async, `GetObj` is not.
@@ -170,7 +162,7 @@ var bullet = Pool.GetObj<Bullet>();
 
 ---
 
-## 6. Spawner — how instances get created
+## 4. Spawner — how instances get created
 
 ```csharp
 public interface ISpawner
@@ -179,16 +171,9 @@ public interface ISpawner
 }
 ```
 
-Default is `DefaultSpawner` (plain `Object.Instantiate`). Replace it when something else should
-create your objects:
-
-```csharp
-Pool.Spawner = new MySpawner();                 // static
-var pool = new PoolSystem(new MySpawner());     // injected
-```
-
-The main reason to replace it is DI — `Object.Instantiate` does not resolve `[Inject]` members, so
-a pooled prefab with dependencies comes out half-initialised:
+Default is `DefaultSpawner` (plain `Object.Instantiate`). The main reason to replace it is DI —
+`Object.Instantiate` does not resolve `[Inject]` members, so a pooled prefab with dependencies comes
+out half-initialised:
 
 ```csharp
 public class VContainerSpawner : ISpawner
@@ -202,14 +187,15 @@ public class VContainerSpawner : ISpawner
 }
 ```
 
-> - **`Pool.Spawner` is set-once** — assign it before the first `Register`/`GetObj` or the setter
->   throws.
-> - **`Spawn` only runs when the pool creates a new instance** (prewarm, or `GetObj` on an empty
->   pool). Reuse never touches it, so this is off the hot path.
+> **`Spawn` only runs when the pool creates a new instance** (prewarm, or `GetObj` on an empty
+> pool). Reuse never touches it, so this is off the hot path.
+
+How you install a spawner is one of the few things that differ between modes — see
+[section 6](#6-static-vs-injected).
 
 ---
 
-## 7. Lifetime — you own it
+## 5. Lifetime — you own it
 
 **The pool never shrinks and never cleans itself up.** That is deliberate: destroying pooled
 objects is your decision, not a side effect of a scene unloading.
@@ -224,9 +210,9 @@ objects is your decision, not a side effect of a scene unloading.
 | DI scope disposed | **Nothing** — `PoolSystem` is not `IDisposable` |
 
 ```csharp
-Pool.DestroyPool<Bullet>();          // one type, every subKey
-Pool.DestroyPool<Sphere>("Red");     // one variant
-Pool.DestroyAllPools();              // everything
+pool.DestroyPool<Bullet>();          // one type, every subKey
+pool.DestroyPool<Sphere>("Red");     // one variant
+pool.DestroyAllPools();              // everything
 ```
 
 - **`DestroyPool<T>()`** when a feature is done with a type — leaving a level, closing a mode.
@@ -240,8 +226,53 @@ Pool.DestroyAllPools();              // everything
 > - **`DestroyPool` also destroys checked-out instances**, including ones you re-parented
 >   elsewhere.
 
-**Injected pools get no cleanup for free**, and each owns its own `DontDestroyOnLoad` root — so
-recreating a scope without cleaning up strands an unreachable one every time:
+---
+
+## 6. Static vs injected
+
+### Setup
+
+**Static** — nothing to install, nothing in the scene:
+
+```csharp
+Pool.Register(bulletPrefab, 20);
+var bullet = Pool.GetObj<Bullet>();
+```
+
+**Injected** — register in your container:
+
+```csharp
+builder.Register<ISpawner, VContainerSpawner>(Lifetime.Singleton);
+builder.Register<PoolSystem>(Lifetime.Singleton).AsSelf();
+```
+
+```csharp
+private PoolSystem pool;
+
+[Inject] public void Construct(PoolSystem pool) => this.pool = pool;
+```
+
+Or with no container at all: `var pool = new PoolSystem();`
+
+### What actually differs
+
+Everything in sections 1–5 is identical. Only these are not:
+
+| | Static | Injected |
+|---|---|---|
+| Install a spawner | `Pool.Spawner = new MySpawner();`<br>**set-once** — before the first `Register`/`GetObj`, or the setter throws | `new PoolSystem(new MySpawner())`, or register `ISpawner` in the container |
+| How many pools | exactly one, forever | as many as you like — e.g. one per child `LifetimeScope` |
+| Reach the `PoolSystem` | `Pool.GetPoolSystem()` | you already hold it |
+| Cleanup | call `Pool.DestroyAllPools()` wherever you decide | same, but see below |
+
+`Pool.GetPoolSystem()` is a method rather than a property on purpose: the first call creates the
+singleton, locks in static mode and can throw — none of which should fire because a debugger
+evaluated a property on hover.
+
+### Injected pools need scope teardown
+
+Each `PoolSystem` owns its own `DontDestroyOnLoad` root, and nothing disposes it for you. Recreate
+a scope without cleaning up and you strand an unreachable one every time:
 
 ```csharp
 protected override void OnDestroy()
@@ -254,9 +285,22 @@ protected override void OnDestroy()
 }
 ```
 
+### The two modes are mutually exclusive
+
+```csharp
+Pool.GetObj<Bullet>();     // static mode claimed
+new PoolSystem();          // InvalidOperationException
+```
+
+Using both would silently give you two disconnected pools, so it throws instead. Several
+*injected* pools are fine — only mixing the two **modes** throws.
+
+> The claim resets on domain reload. If you turn off **Reload Domain** in *Enter Play Mode
+> Options*, it survives between Play sessions and your second run throws.
+
 ---
 
-## 8. Samples
+## 7. Samples
 
 Package Manager → **VegetaPool** → **Samples** → **Import**. Same demo, built both ways.
 
