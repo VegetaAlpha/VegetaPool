@@ -5,21 +5,6 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-09-01
-
-### Added
-
-- `Unregister<T>()` and `Unregister<T>(subKey)` — drop what `Register` stored. `DestroyPool` keeps
-  the config on purpose so a pool rebuilds itself, which leaves no way to say "forget this prefab".
-  Needed before releasing an Addressables handle: without it the config outlives the asset and the
-  next `GetObj` that has to grow the pool instantiates a dead reference.
-
-### Fixed
-
-- Demo scenes used TextMeshPro, whose font assets live per project rather than in the package, so
-  importing a sample into a project without TMP Essentials gave buttons with blank labels. The
-  labels are `UnityEngine.UI.Text` on the built-in font now, and the samples run as imported.
-
 ## [1.0.0] - 2026-09-01
 
 First public release.
@@ -34,11 +19,16 @@ First public release.
   giving one pool per variant via a string key.
 - `this.Release()` extension — a pooled object can return itself without holding a pool reference,
   routed through an internal tracker so it still finds the right pool with several alive.
+- `Unregister<T>()` — drops what `Register` stored. Rarely needed, since `DestroyPool` keeps the
+  config on purpose so a pool rebuilds itself. Use it when the prefab is about to stop being
+  valid, such as before releasing an Addressables handle.
 - `ISpawner` / `DefaultSpawner` — the single seam for instantiation, so DI containers can resolve
   `[Inject]` members on pooled instances.
 - `SO_AllPoolData` / `SO_PoolData` — ScriptableObject prefab config with a custom Inspector that
   draws only the fields for the selected mode and rejects prefabs that don't match it.
-- Samples: *Static Pool Demo* and *VContainer Pool Demo* — the same runnable scene built both ways.
+- Samples: *Static Pool Demo* and *VContainer Pool Demo* — the same runnable scene built both
+  ways, using `UnityEngine.UI.Text` on the built-in font so they run as imported with no
+  extra setup.
 
 ### Notes
 
