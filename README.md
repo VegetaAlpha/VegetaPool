@@ -38,6 +38,60 @@ https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer
 > Samples land in `Assets/Samples/VegetaPool/<version>/`. Open one demo scene at a time — running
 > both in a single Play session trips the [mode guard](#the-two-modes-are-mutually-exclusive).
 
+## Quick start
+
+The common path, start to finish. Everything below this section is a special case you can ignore
+until you hit it.
+
+```csharp
+using UnityEngine;
+using VegetaSystem;
+
+public class Bullet : MonoBehaviour, IPoolable
+{
+    public void OnGet()     => gameObject.SetActive(true);
+    public void OnRelease() => gameObject.SetActive(false);
+}
+```
+
+```csharp
+public class Weapon : MonoBehaviour
+{
+    [SerializeField] private Bullet bulletPrefab;
+
+    private void Awake() => Pool.Register(bulletPrefab, initAmount: 20);
+
+    public void Fire()
+    {
+        var bullet = Pool.GetObj<Bullet>();
+        bullet.transform.position = transform.position;
+    }
+
+    public void Recycle(Bullet bullet) => Pool.ReleaseObj(bullet);
+
+    private void OnDestroy() => Pool.DestroyPool<Bullet>();
+}
+```
+
+Four calls, and they cover almost everything:
+
+| | |
+|---|---|
+| `Pool.Register(prefab, n)` | Once at startup. Stores config; nothing is created yet |
+| `Pool.GetObj<T>()` | Take one out |
+| `Pool.ReleaseObj(obj)` | Give it back for reuse |
+| `Pool.DestroyPool<T>()` | Done with this type — free the memory |
+
+> Three things to know before you read further:
+> - Released objects are **parked, not destroyed** — clear their references in `OnRelease`.
+> - The pool **never shrinks** by itself, and a scene unload frees nothing.
+> - `ReleaseObj` is reuse; only `DestroyPool` gives memory back.
+
+Everything else is optional: [variants](#variants--isubkeypoolable) of one type,
+[self-release](#release--two-ways), [ScriptableObject config](#so_allpooldata--built-in),
+[Addressables](#everything-else--you-write-it), [custom instantiation](#4-spawner--how-instances-get-created),
+and [injecting a pool](#6-static-vs-injected) instead of the static one.
+
 ## One class, two ways to reach it
 
 Everything lives on **`PoolSystem`**. `Pool` is a static facade that forwards every call to one
