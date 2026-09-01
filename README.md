@@ -2,12 +2,38 @@
 
 Object pooling for Unity. No dependencies.
 
+Package Manager → **+** → **Install package from git URL…** · Unity 2022.3+ · git must be on PATH.
+
 ```
 https://github.com/VegetaAlpha/VegetaPool.git?path=Pool
 ```
 
-Package Manager → **+** → **Install package from git URL…** · Unity 2022.3+ · no tags yet, so this
-tracks `main`.
+### Pinning a version
+
+The URL has two parts after the repo:
+
+| | |
+|---|---|
+| `?path=Pool` | the subfolder holding `package.json` — always required, the package is not at the repo root |
+| `#v0.1.0` | any git ref: **tag**, branch, or full commit SHA |
+
+```
+...VegetaPool.git?path=Pool             → default branch, moves under you
+...VegetaPool.git?path=Pool#v0.1.0      → tag        ← prefer this
+...VegetaPool.git?path=Pool#main        → branch, explicit
+...VegetaPool.git?path=Pool#3f9a1c2     → commit SHA
+```
+
+> - **`?path=` goes before `#`.** `#v0.1.0?path=Pool` silently fails to resolve — the `#` fragment
+>   swallows the rest.
+> - **Pin a tag for anything you ship.** Without `#`, you get whatever is on the default branch the
+>   day you install, and a teammate installing next week gets something else.
+> - **Package Manager cannot update git packages.** The *Update* button does nothing here. To move
+>   versions, edit the URL in `Packages/manifest.json` and let Unity re-resolve; the exact commit
+>   is recorded in `packages-lock.json`.
+
+> - **No tags exist yet**, so the URL above tracks `main`. Once one is published, switch to the
+>   pinned form. See [Releases](https://github.com/VegetaAlpha/VegetaPool/releases).
 
 ### One class, two ways to reach it
 
