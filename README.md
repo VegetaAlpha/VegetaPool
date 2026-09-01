@@ -15,11 +15,11 @@ https://github.com/VegetaAlpha/VegetaPool.git?path=Pool
 Specific version — append `#<tag>`:
 
 ```
-https://github.com/VegetaAlpha/VegetaPool.git?path=Pool#v0.1.0
+https://github.com/VegetaAlpha/VegetaPool.git?path=Pool#v1.0.0
 ```
 
-Unity 2022.3+ · `?path=` must come before `#` · no tags published yet, so the plain URL tracks
-`main`.
+Unity 2022.3+ · `?path=` must come before `#` · without a `#` the URL tracks `main`, so pin a tag
+for anything you ship. See [Releases](https://github.com/VegetaAlpha/VegetaPool/releases).
 
 ### Importing the samples
 
