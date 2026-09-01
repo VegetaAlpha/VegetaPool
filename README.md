@@ -152,7 +152,12 @@ Addressables, `Resources.Load`, a factory, a plain field: all fine. Only the fir
 ### `SO_AllPoolData` — built in
 
 Create → **Pool → PoolData** per entry, then Create → **Pool → AllPoolData** collecting them. Each
-entry is `Single` (one `IPoolable`) or `Multiple` (a list of `ISubKeyPoolable` variants).
+entry is `Single` (one `IPoolable`) or `Multiple` (a list of `ISubKeyPoolable` variants) — the
+Inspector only draws the fields for the mode you pick.
+
+| `SO_PoolData` — one entry | `SO_AllPoolData` — collects them |
+|---|---|
+| ![SO_PoolData inspector in Single mode](Docs/so-pooldata.png) | ![SO_AllPoolData inspector listing two configs](Docs/so-allpooldata.png) |
 
 ```csharp
 [SerializeField] private SO_AllPoolData poolConfig;
