@@ -94,7 +94,7 @@ var red = pool.GetObj<Sphere>(SphereType.Red.ToString());  // same source, so it
 
 | | |
 |---|---|
-| `Register<T>(prefab, initAmount)` | Lazy — instances are created on first use |
+| `Register<T>(prefab, initAmount)` | Records config only. The `initAmount` instances are prewarmed on the first `GetObj<T>()`, never here |
 | `GetObj<T>()` | `IPoolable` |
 | `GetObj<T>(subKey)` | `ISubKeyPoolable` |
 | `ReleaseObj(obj, ignoreParentPool = false, worldPosStay = true)` | Back to the pool |
