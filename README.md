@@ -59,41 +59,33 @@ One class, several interchangeable prefabs, each its own pool. The whole mechani
 string GetSubKeyPool();
 ```
 
-**It returns a plain `string`.** The pool never looks at where that string comes from, so use
-whatever fits — a serialized field is the simplest:
+It returns a plain `string` and the pool never looks at where it came from — a serialized field, a
+constant, `gameObject.name`, an id from your own data all work.
+
+**An enum is the recommended source.** The same key has to appear on the prefab and at the call
+site; typing it by hand on either side is a silent failure waiting to happen.
 
 ```csharp
 public class Sphere : MonoBehaviour, ISubKeyPoolable
 {
-    [SerializeField] private string variant;      // "Red", "Blue", … typed per prefab
+    [SerializeField] private SphereType sphereType;   // set per prefab
 
-    public string GetSubKeyPool() => variant;
+    public string GetSubKeyPool() => sphereType.ToString();
 
     public void OnGet()     => gameObject.SetActive(true);
     public void OnRelease() => gameObject.SetActive(false);
 }
 ```
 
-An enum is just a tidier source for the same string — no typos, and autocomplete at the call site:
-
 ```csharp
-[SerializeField] private SphereType sphereType;
-
-public string GetSubKeyPool() => sphereType.ToString();
+pool.Register(redSpherePrefab, 10);                        // key comes from the prefab
+var red = pool.GetObj<Sphere>(SphereType.Red.ToString());  // same source, so it can't drift
 ```
 
-A constant, a rarity id, `gameObject.name`, an id from your own data table — all fine.
-
-```csharp
-pool.Register(redSpherePrefab, 10);                 // key comes from the prefab
-var red = pool.GetObj<Sphere>("Red");               // must match it
-```
-
-> - **The key is read off the prefab during `Register()`**, so it has to be fixed per prefab — not
->   something computed from runtime state.
-> - **`GetObj<T>(subKey)` matches exactly, case-sensitive.** Registering `"Red"` and asking for
->   `"red"` gets a `Pool config not found` warning and a `null`.
-> - Pools are keyed by `prefab.GetType().Name` — the **runtime** type, not the compile-time `T`.
+> - **Matching is exact and case-sensitive** — `"Red"` registered, `"red"` requested gets a
+>   `Pool config not found` warning and a `null`. That is what the enum buys you.
+> - **The key is read off the prefab during `Register()`**, so fix it per prefab; don't compute it
+>   from runtime state.
 
 ---
 
@@ -114,7 +106,7 @@ pool.Register(bulletPrefab, initAmount: 20);
 pool.Register(redSpherePrefab, 10);              // subKey comes from GetSubKeyPool()
 
 var bullet = pool.GetObj<Bullet>();
-var red    = pool.GetObj<Sphere>("Red");
+var red    = pool.GetObj<Sphere>(SphereType.Red.ToString());
 
 pool.ReleaseObj(bullet);
 pool.DestroyPool<Bullet>();
@@ -124,6 +116,7 @@ pool.DestroyPool<Bullet>();
 >   `Pool config not found: <Type>/<subKey>` first.
 > - `ignoreParentPool: true` leaves a released object where it is in the hierarchy instead of
 >   re-parenting it under the pool container.
+> - `Register` keys by `prefab.GetType().Name` — the **runtime** type, not the compile-time `T`.
 
 ### Release — two ways
 
