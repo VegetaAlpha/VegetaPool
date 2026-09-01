@@ -92,6 +92,42 @@ Everything else is optional: [variants](#variants--isubkeypoolable) of one type,
 [Addressables](#everything-else--you-write-it), [custom instantiation](#4-spawner--how-instances-get-created),
 and [injecting a pool](#6-static-vs-injected) instead of the static one.
 
+## Why not `UnityEngine.Pool`?
+
+Unity has shipped `ObjectPool<T>` since 2021. For one type that you hold locally, it is genuinely
+enough — use it.
+
+```csharp
+var pool = new ObjectPool<Bullet>(
+    createFunc:      () => Object.Instantiate(bulletPrefab),
+    actionOnGet:     b => b.gameObject.SetActive(true),
+    actionOnRelease: b => b.gameObject.SetActive(false),
+    actionOnDestroy: b => Object.Destroy(b.gameObject),
+    defaultCapacity: 20);
+
+var bullet = pool.Get();
+pool.Release(bullet);
+```
+
+It is a generic C# pool. It knows nothing about prefabs — you write `createFunc` — and nothing
+about who else needs it: you hold the `ObjectPool<Bullet>` yourself and pass it around.
+
+| | `ObjectPool<T>` | VegetaPool |
+|---|---|---|
+| Instantiation | your `createFunc` | a prefab you `Register` |
+| Finding the pool | you hold the instance | keyed by type — `Pool.GetObj<Bullet>()` from anywhere |
+| Variants of one type | a separate pool per variant | `GetObj<T>(subKey)` |
+| Config from the Inspector | — | `SO_AllPoolData` |
+| An object returning itself | — | `this.Release()` |
+| DI-resolved instances | your `createFunc` | swap the `ISpawner` |
+| Hierarchy | flat | one container per pool |
+| **Hard size cap** | **`maxSize`, destroys the excess** | **none** |
+| **Double release** | **throws (`collectionCheck`)** | logs a warning |
+
+The last two rows go the other way. Unity's pool bounds its own growth and fails loudly on a double
+release; this one [grows to your peak and stays there](#5-lifetime--you-own-it) and only logs. If a
+bounded pool matters more to you than prefab wiring, theirs is the better tool.
+
 ## One class, two ways to reach it
 
 Everything lives on **`PoolSystem`**. `Pool` is a static facade that forwards every call to one
