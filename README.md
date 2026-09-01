@@ -6,6 +6,8 @@ Object pooling for Unity. No dependencies.
 
 Package Manager → **+** → **Install package from git URL…**
 
+![Package Manager, the + menu, Install package from git URL](Docs/install-git-url.png)
+
 ```
 https://github.com/VegetaAlpha/VegetaPool.git?path=Pool
 ```
@@ -18,6 +20,23 @@ https://github.com/VegetaAlpha/VegetaPool.git?path=Pool#v0.1.0
 
 Unity 2022.3+ · `?path=` must come before `#` · no tags published yet, so the plain URL tracks
 `main`.
+
+### Importing the samples
+
+Select **VegetaPool** in Package Manager → **Samples** tab → **Import**. Two demos appear:
+
+![The Samples tab listing Static Pool Demo and VContainer Pool Demo](Docs/import-samples.png)
+
+**Install VContainer before importing the VContainer demo.** Its `.asmdef` references `VContainer`
+by name, so importing it into a project that doesn't have the package leaves that reference
+unresolved and the sample assembly fails to compile. Install it the same way — **+** → git URL:
+
+```
+https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer
+```
+
+> Samples land in `Assets/Samples/VegetaPool/<version>/`. Open one demo scene at a time — running
+> both in a single Play session trips the [mode guard](#the-two-modes-are-mutually-exclusive).
 
 ## One class, two ways to reach it
 
@@ -344,20 +363,15 @@ Using both would silently give you two disconnected pools, so it throws instead.
 
 ## 7. Samples
 
-Package Manager → **VegetaPool** → **Samples** → **Import**. Same demo, built both ways.
+Two runnable demo scenes, the same demo built both ways — see
+[Importing the samples](#importing-the-samples) for how to get them.
 
-| Sample | Needs |
-|---|---|
-| **Static Pool Demo** | nothing |
-| **VContainer Pool Demo** | VContainer |
+| Sample | Needs | Shows |
+|---|---|---|
+| **Static Pool Demo** | nothing | Buttons spawning cubes and colour-keyed spheres through `Pool.*`, configured by an `SO_AllPoolData` asset |
+| **VContainer Pool Demo** | VContainer | The same scene through a `LifetimeScope`, plus an `ISpawner` backed by `IObjectResolver.Instantiate` |
 
-```
-https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer
-```
-
-> - **Install VContainer *before* importing the second sample** — its `.asmdef` references
->   `VContainer` by name and won't resolve otherwise.
-> - **Open one scene at a time.** Running both in a single Play session trips the mode guard.
+The two controllers are identical apart from `Pool.` versus `pool.`.
 
 ---
 
