@@ -53,23 +53,47 @@ public class Bullet : MonoBehaviour, IPoolable
 
 ### Variants — `ISubKeyPoolable`
 
-One class, several interchangeable prefabs, each its own pool.
+One class, several interchangeable prefabs, each its own pool. The whole mechanism is one method:
 
 ```csharp
-public enum SphereType { Red, Blue, Yellow }
+string GetSubKeyPool();
+```
 
+**It returns a plain `string`.** The pool never looks at where that string comes from, so use
+whatever fits — a serialized field is the simplest:
+
+```csharp
 public class Sphere : MonoBehaviour, ISubKeyPoolable
 {
-    [SerializeField] private SphereType sphereType;   // set per prefab
+    [SerializeField] private string variant;      // "Red", "Blue", … typed per prefab
 
-    public string GetSubKeyPool() => sphereType.ToString();
+    public string GetSubKeyPool() => variant;
 
     public void OnGet()     => gameObject.SetActive(true);
     public void OnRelease() => gameObject.SetActive(false);
 }
 ```
 
-> Pools are keyed by `prefab.GetType().Name` — the **runtime** type, not the compile-time `T`.
+An enum is just a tidier source for the same string — no typos, and autocomplete at the call site:
+
+```csharp
+[SerializeField] private SphereType sphereType;
+
+public string GetSubKeyPool() => sphereType.ToString();
+```
+
+A constant, a rarity id, `gameObject.name`, an id from your own data table — all fine.
+
+```csharp
+pool.Register(redSpherePrefab, 10);                 // key comes from the prefab
+var red = pool.GetObj<Sphere>("Red");               // must match it
+```
+
+> - **The key is read off the prefab during `Register()`**, so it has to be fixed per prefab — not
+>   something computed from runtime state.
+> - **`GetObj<T>(subKey)` matches exactly, case-sensitive.** Registering `"Red"` and asking for
+>   `"red"` gets a `Pool config not found` warning and a `null`.
+> - Pools are keyed by `prefab.GetType().Name` — the **runtime** type, not the compile-time `T`.
 
 ---
 
@@ -90,7 +114,7 @@ pool.Register(bulletPrefab, initAmount: 20);
 pool.Register(redSpherePrefab, 10);              // subKey comes from GetSubKeyPool()
 
 var bullet = pool.GetObj<Bullet>();
-var red    = pool.GetObj<Sphere>(SphereType.Red.ToString());
+var red    = pool.GetObj<Sphere>("Red");
 
 pool.ReleaseObj(bullet);
 pool.DestroyPool<Bullet>();
