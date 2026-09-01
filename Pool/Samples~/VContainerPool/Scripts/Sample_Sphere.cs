@@ -1,24 +1,27 @@
 using UnityEngine;
 
-namespace VegetaSystem.Samples.Static
+namespace VegetaSystem.Samples.Injection
 {
-    public class Sample_Cube : MonoBehaviour, IPoolable
+    public class Sample_Sphere : MonoBehaviour, ISubKeyPoolable
     {
+        [SerializeField] private Sample_SphereType sphereType;
         [SerializeField] private float speedRotate;
         private bool isActive;
         private float time;
 
         public void OnGet()
         {
-            gameObject.SetActive(true);
             time = 0;
+            gameObject.SetActive(true);
         }
         public void OnRelease()
         {
+            time = 0;
             gameObject.SetActive(false);
             isActive = false;
-            time = 0;
         }
+
+        public string GetSubKeyPool() => sphereType.ToString();
 
         public void SetActive(bool value) => isActive = value;
 
@@ -26,10 +29,17 @@ namespace VegetaSystem.Samples.Static
         {
             if (!isActive) return;
             time += Time.deltaTime;
-            if(time > 2) this.Release(); // Auto release but recommend use pool.ReleaseObj
+            if(time > 2) this.Release();
             transform.Rotate(Vector3.up * speedRotate * Time.deltaTime);
         }
 
-        public void CallCube() { }
+        public void CallSphere() { }
+    }
+
+    public enum Sample_SphereType
+    {
+        Red,
+        Blue,
+        Yellow
     }
 }

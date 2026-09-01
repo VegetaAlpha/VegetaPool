@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace VegetaSystem.Samples.Static
+namespace VegetaSystem.Samples.Injection
 {
     public class Sample_Cube : MonoBehaviour, IPoolable
     {

@@ -29,8 +29,7 @@ Package id: `com.vegetaalpha.pool`.
 |---|---|
 | Unity | 2022.3 or newer |
 | Dependencies | **none** |
-| VContainer | only for the *VContainer adapter* sample |
-| Addressables | only for the *Addressables loader* sample |
+| VContainer | only for the *VContainer Pool Demo* sample |
 
 The core package references nothing — its `.asmdef` has an empty `references` array. Installing it
 never drags a DI framework or Addressables into your project.
@@ -365,7 +364,7 @@ Only *getting the prefab reference* is async. Everything after that — register
 `ISpawner`**, because pooled instances are created with plain `Instantiate` from a prefab you
 already hold.
 
-The shipped sample is one method:
+It takes about ten lines, and it is not shipped with the package — copy this into your project:
 
 ```csharp
 public static class AddressablePoolLoader
@@ -412,10 +411,9 @@ warning and a `null`.
 **2. Do not release the Addressables handle while the pool is alive.** `Register()` stores the
 prefab reference and the pool instantiates from it *later*, every time it needs to grow. Calling
 `Addressables.Release(handle)` right after registering unloads the prefab out from under the pool.
-The shipped sample never releases — deliberately, but it also means nothing ever unloads it.
 
-**3. Pair handle release with `DestroyPool`.** Since the sample drops the handle on the floor,
-track it yourself if you care about unloading. A small wrapper:
+**3. Pair handle release with `DestroyPool`.** The snippet above drops the handle on the floor, so
+nothing ever unloads. Track it yourself if you care. A small wrapper:
 
 ```csharp
 public class AddressablePoolRegistry
@@ -541,57 +539,45 @@ public class GameLifetimeScope : LifetimeScope
 
 ## Samples
 
-Package Manager → **VegetaPool** → **Samples** tab → **Import**.
+Two runnable demo scenes, the same demo built both ways so you can read them side by side.
 
-Each sample is independent — import only what you need. **Both have a prerequisite that must be
-installed first.**
+Package Manager → **VegetaPool** → **Samples** tab → **Import**. They land under
+`Assets/Samples/VegetaPool/<version>/`.
 
-### VContainer adapter
+| Sample | Needs | What it shows |
+|---|---|---|
+| **Static Pool Demo** | nothing | Buttons spawning cubes and colour-keyed spheres through `Pool.*`, configured by an `SO_AllPoolData` asset |
+| **VContainer Pool Demo** | VContainer | The same scene through a `LifetimeScope`, plus an `ISpawner` backed by `IObjectResolver.Instantiate` |
 
-An `ISpawner` backed by `IObjectResolver.Instantiate`, so pooled instances get their own
-`[Inject]` dependencies resolved instead of a plain `Instantiate`.
+Each sample carries its own scene, prefabs, materials, `SO_PoolData` assets and an `.asmdef`, so
+importing one never drags in the other.
 
-1. **Install VContainer first** — Package Manager → git URL:
+### Import VContainer first
+
+The VContainer sample's `.asmdef` references `VContainer` by name. Import it into a project that
+doesn't have that package and the assembly fails to resolve its reference.
+
+1. Package Manager → **+** → git URL:
    ```
    https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer
    ```
 2. *Then* import the sample.
-3. Register it:
-   ```csharp
-   builder.Register<ISpawner, VContainerSpawner>(Lifetime.Singleton);
-   builder.Register<PoolSystem>(Lifetime.Singleton).AsSelf();
-   ```
 
-### Addressables loader
+To recover from importing it too early: install VContainer, or delete the imported folder under
+`Assets/Samples/VegetaPool/`.
 
-`AddressablePoolLoader.RegisterAsync<T>()` — resolve a prefab by Addressable key, then `Register()`
-it normally. A starting point to adapt, not a full config system.
+> The `.asmdef` is what keeps this survivable. Without it these scripts would compile into
+> `Assembly-CSharp`, and a missing VContainer would break **your whole project**, not just the
+> sample.
 
-1. **Install Addressables first** — Package Manager → Unity Registry → *Addressables*.
-2. *Then* import the sample.
+### Running them
 
-> **Order matters.** Each sample ships an `.asmdef` referencing its dependency by name
-> (`VContainer`, `Unity.Addressables`). Import the sample into a project that lacks that package
-> and the reference cannot resolve, producing compile errors across the assembly. Install the
-> dependency first and the sample compiles immediately.
->
-> To recover: either install the missing package, or delete the imported sample folder under
-> `Assets/Samples/VegetaPool/`.
+Open one scene at a time. Running both in a single Play session trips the
+[mutual-exclusion guard](#the-two-modes-are-mutually-exclusive) — the first one to run claims the
+usage mode, and the second throws.
 
-### Demo scenes
-
-The repository also carries two runnable demo scenes under `Assets/PoolSamples/` — not shipped in
-the package, but clone the repo to see both modes side by side:
-
-| | |
-|---|---|
-| `StaticPool/` | Buttons spawning cubes and spheres through `Pool.*` |
-| `VContainerPool/` | The same demo, injected through a `LifetimeScope` |
-
-The two controllers are line-for-line identical apart from `Pool.` versus `pool.`. Open them
-**one at a time** — running both in one Play session trips the mutual-exclusion guard.
-
----
+The two controllers are line-for-line identical apart from `Pool.` versus `pool.`, which is the
+fastest way to see exactly what switching modes costs you.
 
 ## Implementation walkthrough
 
@@ -639,8 +625,9 @@ var pool = new PoolSystem(new MySpawner());   // DI
 ## Design notes
 
 - **Zero dependencies in the core.** `PoolSystem` takes an `ISpawner` and nothing else. The
-  VContainer and Addressables adapters ship as optional Samples specifically so installing this
-  package never forces those packages on a project that doesn't want them.
+  VContainer adapter lives inside its sample rather than the core, specifically so installing this
+  package never forces a DI framework on a project that doesn't want one. Addressables needs no
+  adapter at all — see [Route B](#route-b--addressables).
 - **Static facade and constructed instances are mutually exclusive**, enforced by one
   `PoolUsageMode` field that never returns to `None` once claimed. Using both throws instead of
   silently producing two disconnected pools. Several *constructed* pools are still fine.

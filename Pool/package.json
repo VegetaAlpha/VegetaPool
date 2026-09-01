@@ -3,25 +3,29 @@
     "displayName": "VegetaPool",
     "version": "0.1.0",
     "unity": "2022.3",
-    "description": "Framework-agnostic pooling core (Register/GetObj/ReleaseObj/DestroyPool). PoolSystem takes any ISpawner — no DI framework required by default; use Pool.GetObj<T>() for static-style calls, or construct/inject PoolSystem yourself. Needs a prefab supplier to feed Register(): SO_AllPoolData (included, works out of the box via ApplyTo(pool)) is the built-in one — import a Sample for other supply/spawn mechanisms (VContainer, Addressables).",
+    "description": "Framework-agnostic object pooling: Register/GetObj/ReleaseObj/DestroyPool over any ISpawner. No dependencies — use the static Pool facade or construct/inject your own PoolSystem. Prefabs are supplied by you: SO_AllPoolData is included and works out of the box, or call Register() with a prefab from anywhere (Addressables, Resources, a factory). Import a sample for a runnable demo scene.",
     "keywords": [
         "pooling",
-        "di",
-        "injection"
+        "object-pool",
+        "gameobject",
+        "performance",
+        "optimization"
     ],
     "author": {
-        "name": "VegetaAlpha"
+        "name": "VegetaAlpha",
+        "url": "https://github.com/VegetaAlpha"
     },
+    "documentationUrl": "https://github.com/VegetaAlpha/VegetaPool#readme",
     "samples": [
         {
-            "displayName": "VContainer adapter",
-            "description": "ISpawner backed by VContainer's IObjectResolver.Instantiate — requires jp.hadashikick.vcontainer installed.",
-            "path": "Samples~/VContainer"
+            "displayName": "Static Pool Demo",
+            "description": "Runnable scene: buttons spawning cubes and colour-keyed spheres through the static Pool facade, with an SO_AllPoolData config. No dependencies.",
+            "path": "Samples~/StaticPool"
         },
         {
-            "displayName": "Addressables loader",
-            "description": "Minimal example: resolve a prefab by Addressable key, then Register it into a PoolSystem the normal synchronous way — requires com.unity.addressables installed. Adapt to your project's config shape.",
-            "path": "Samples~/Addressables"
+            "displayName": "VContainer Pool Demo",
+            "description": "The same scene wired through a VContainer LifetimeScope instead, including an ISpawner backed by IObjectResolver.Instantiate. Install jp.hadashikick.vcontainer BEFORE importing.",
+            "path": "Samples~/VContainerPool"
         }
     ]
 }
