@@ -48,8 +48,9 @@ public class Bullet : MonoBehaviour, IPoolable
 }
 ```
 
-> **Clear references in `OnRelease`.** Anything a pooled object still points at stays in memory as
-> long as the pool does.
+> **Released objects are parked, not destroyed** — every field still holds what it held. In
+> `OnRelease`, null your references, clear your collections, and unsubscribe from events: an
+> inactive object receives no `Update`, but it still receives C# events.
 
 ### Variants — `ISubKeyPoolable`
 
