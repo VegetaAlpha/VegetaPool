@@ -137,6 +137,10 @@ pool.DestroyPool<Bullet>();
 > - `ignoreParentPool: true` leaves a released object where it is in the hierarchy instead of
 >   re-parenting it under the pool container.
 > - `Register` keys by `prefab.GetType().Name` — the **runtime** type, not the compile-time `T`.
+> - **`DestroyPool` does not unregister.** `Register` only stores config — the prefab and the
+>   amount — never a pool or an object. Destroying frees the pool and everything in it but leaves
+>   that config, so the next `GetObj<T>()` rebuilds the pool and prewarms `initAmount` again. You
+>   never re-register.
 
 ### Release — two ways
 
@@ -207,8 +211,12 @@ var bullet = pool.GetObj<Bullet>();
 ```
 
 > - **Await before the first `GetObj`.** Registration is async, `GetObj` is not.
-> - **Don't release the handle while the pool lives.** `Register()` keeps the prefab and
->   instantiates from it every time the pool grows. Release only after `DestroyPool<T>()`.
+> - **Don't release the handle while you still use that type.** `Register()` keeps the prefab and
+>   instantiates from it every time the pool grows, and `DestroyPool` doesn't drop that config.
+>   Once the asset is unloaded the prefab reference is dead, so the next `GetObj` that has to
+>   create an instance throws `ArgumentException: The Object you want to instantiate is null.` —
+>   objects already spawned keep working, which is what makes this show up late. After releasing,
+>   either stop using that type or `Register()` it again with a freshly loaded prefab.
 > - **Don't put Addressable prefabs in `SO_PoolData`.** Its `Prefab` field is a direct reference,
 >   so the asset gets pulled into the build as a hard dependency — defeating Addressables.
 
