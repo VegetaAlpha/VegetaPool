@@ -1,25 +1,43 @@
 # VegetaPool
 
-Object pooling for Unity. No dependencies.
+[![openupm](https://img.shields.io/npm/v/com.vegetaalpha.pool?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.vegetaalpha.pool/)
+
+Object pooling for Unity. No dependencies. Unity 2022.3+.
 
 ## Installation
+
+### OpenUPM — recommended
+
+```bash
+openupm add com.vegetaalpha.pool
+```
+
+Or add the scoped registry to `Packages/manifest.json` by hand, then Package Manager → **+** →
+**Add package by name…** → `com.vegetaalpha.pool`:
+
+```json
+"scopedRegistries": [
+  {
+    "name": "OpenUPM",
+    "url": "https://package.openupm.com",
+    "scopes": [ "com.vegetaalpha" ]
+  }
+]
+```
+
+### Git URL
 
 Package Manager → **+** → **Install package from git URL…**
 
 ![Package Manager, the + menu, Install package from git URL](Docs/install-git-url.png)
 
 ```
-https://github.com/VegetaAlpha/VegetaPool.git?path=Pool
-```
-
-Specific version — append `#<tag>`:
-
-```
 https://github.com/VegetaAlpha/VegetaPool.git?path=Pool#v1.0.0
 ```
 
-Unity 2022.3+ · `?path=` must come before `#` · without a `#` the URL tracks `main`, so pin a tag
-for anything you ship. See [Releases](https://github.com/VegetaAlpha/VegetaPool/releases).
+> `?path=` must come before `#`, and without a `#` the URL tracks `main`. Note that **Package
+> Manager cannot update a git package** — its *Update* button does nothing and changing version
+> means editing `manifest.json`. That is the reason to prefer OpenUPM.
 
 ### Importing the samples
 
