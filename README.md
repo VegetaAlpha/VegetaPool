@@ -13,6 +13,12 @@ Package Manager → **+** → **Install package from git URL…**
 ![Package Manager, the + menu, Install package from git URL](Docs/install-git-url.png)
 
 ```
+https://github.com/VegetaAlpha/VegetaPool.git?path=Pool
+```
+
+Specific version — append `#<tag>`:
+
+```
 https://github.com/VegetaAlpha/VegetaPool.git?path=Pool#v1.0.0
 ```
 
