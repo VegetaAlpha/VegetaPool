@@ -36,6 +36,12 @@ namespace VegetaSystem
         public static void Register<T>(T prefab, int initAmount) where T : Component
             => GetPoolSystem().Register(prefab, initAmount);
 
+        public static void Unregister<T>() where T : class, IPoolable
+            => GetPoolSystem().Unregister<T>();
+
+        public static void Unregister<T>(string subKey) where T : class, ISubKeyPoolable
+            => GetPoolSystem().Unregister<T>(subKey);
+
         public static T GetObj<T>() where T : class, IPoolable
             => GetPoolSystem().GetObj<T>();
 

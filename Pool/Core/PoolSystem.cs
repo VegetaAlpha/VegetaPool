@@ -177,6 +177,16 @@ namespace VegetaSystem
             sub[subKey] = new PoolConfigEntry(prefab, initAmount);
         }
 
+        private void RemoveConfigEntry(string typeName, string subKey)
+        {
+            if (!configIndex.TryGetValue(typeName, out var sub))
+                return;
+
+            sub.Remove(subKey);
+            if (sub.Count == 0)
+                configIndex.Remove(typeName);
+        }
+
         private Transform GetOrCreateRoot()
         {
             if (root == null)
@@ -327,6 +337,18 @@ namespace VegetaSystem
 
             Debug.LogWarning($"{prefab.GetType().Name} implements neither IPoolable nor ISubKeyPoolable — not registered.");
         }
+
+        /// <summary>
+        /// Drops what Register stored, so the pool no longer knows this type. Rarely needed:
+        /// DestroyPool keeps the config on purpose and rebuilds from it. Reach for this when the
+        /// prefab itself is about to become invalid — releasing an Addressables handle, say —
+        /// so a later GetObj warns and returns null instead of instantiating a dead reference.
+        /// Destroys nothing; call DestroyPool first if a pool is live.
+        /// </summary>
+        public void Unregister<T>() where T : class, IPoolable => configIndex.Remove(typeof(T).Name);
+
+        public void Unregister<T>(string subKey) where T : class, ISubKeyPoolable
+            => RemoveConfigEntry(typeof(T).Name, subKey);
 
         public T GetObj<T>() where T : class, IPoolable => GetFromPool<T>(typeof(T).Name, "");
 

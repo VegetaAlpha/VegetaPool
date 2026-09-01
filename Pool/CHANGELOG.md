@@ -5,6 +5,21 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-01
+
+### Added
+
+- `Unregister<T>()` and `Unregister<T>(subKey)` — drop what `Register` stored. `DestroyPool` keeps
+  the config on purpose so a pool rebuilds itself, which leaves no way to say "forget this prefab".
+  Needed before releasing an Addressables handle: without it the config outlives the asset and the
+  next `GetObj` that has to grow the pool instantiates a dead reference.
+
+### Fixed
+
+- Demo scenes used TextMeshPro, whose font assets live per project rather than in the package, so
+  importing a sample into a project without TMP Essentials gave buttons with blank labels. The
+  labels are `UnityEngine.UI.Text` on the built-in font now, and the samples run as imported.
+
 ## [1.0.0] - 2026-09-01
 
 First public release.

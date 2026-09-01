@@ -117,6 +117,7 @@ var red = pool.GetObj<Sphere>(SphereType.Red.ToString());  // same source, so it
 | `GetObj<T>()` | `IPoolable` |
 | `GetObj<T>(subKey)` | `ISubKeyPoolable` |
 | `ReleaseObj(obj, ignoreParentPool = false, worldPosStay = true)` | Back to the pool |
+| `Unregister<T>()` / `Unregister<T>(subKey)` | Forget the config. Rarely needed — see below |
 | `DestroyPool<T>()` | One type, every subKey |
 | `DestroyPool<T>(subKey)` | One variant |
 | `DestroyAllPools()` | Everything |
@@ -141,6 +142,10 @@ pool.DestroyPool<Bullet>();
 >   amount — never a pool or an object. Destroying frees the pool and everything in it but leaves
 >   that config, so the next `GetObj<T>()` rebuilds the pool and prewarms `initAmount` again. You
 >   never re-register.
+> - **`Unregister<T>()` is the rare opposite** — it drops that config and nothing else. You will
+>   almost never want it, since keeping the config is what makes a destroyed pool rebuild itself.
+>   It exists for one case: the prefab is about to stop being valid, so a later `GetObj` should
+>   warn and return `null` rather than instantiate a dead reference.
 
 ### Release — two ways
 
@@ -215,8 +220,14 @@ var bullet = pool.GetObj<Bullet>();
 >   instantiates from it every time the pool grows, and `DestroyPool` doesn't drop that config.
 >   Once the asset is unloaded the prefab reference is dead, so the next `GetObj` that has to
 >   create an instance throws `ArgumentException: The Object you want to instantiate is null.` —
->   objects already spawned keep working, which is what makes this show up late. After releasing,
->   either stop using that type or `Register()` it again with a freshly loaded prefab.
+>   objects already spawned keep working, which is what makes this show up late. Unregister first,
+>   so a stray `GetObj` gets the usual `Pool config not found` warning and a `null` instead:
+>
+>   ```csharp
+>   pool.DestroyPool<Bullet>();     // pool and its instances
+>   pool.Unregister<Bullet>();      // the prefab reference
+>   Addressables.Release(handle);   // now safe
+>   ```
 > - **Don't put Addressable prefabs in `SO_PoolData`.** Its `Prefab` field is a direct reference,
 >   so the asset gets pulled into the build as a hard dependency — defeating Addressables.
 
