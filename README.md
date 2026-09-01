@@ -6,7 +6,20 @@ Object pooling for Unity. No dependencies. Unity 2022.3+.
 
 ## Installation
 
-### OpenUPM — recommended
+### Git URL
+
+Package Manager → **+** → **Install package from git URL…**
+
+![Package Manager, the + menu, Install package from git URL](Docs/install-git-url.png)
+
+```
+https://github.com/VegetaAlpha/VegetaPool.git?path=Pool#v1.0.0
+```
+
+> `?path=` must come before `#`, and without a `#` the URL tracks `main`, so pin a tag for anything
+> you ship. See [Releases](https://github.com/VegetaAlpha/VegetaPool/releases).
+
+### OpenUPM
 
 ```bash
 openupm add com.vegetaalpha.pool
@@ -25,19 +38,8 @@ Or add the scoped registry to `Packages/manifest.json` by hand, then Package Man
 ]
 ```
 
-### Git URL
-
-Package Manager → **+** → **Install package from git URL…**
-
-![Package Manager, the + menu, Install package from git URL](Docs/install-git-url.png)
-
-```
-https://github.com/VegetaAlpha/VegetaPool.git?path=Pool#v1.0.0
-```
-
-> `?path=` must come before `#`, and without a `#` the URL tracks `main`. Note that **Package
-> Manager cannot update a git package** — its *Update* button does nothing and changing version
-> means editing `manifest.json`. That is the reason to prefer OpenUPM.
+> Installed this way, Package Manager's *Updates* tab notices new versions. It cannot do that for a
+> git package, where changing version means editing `manifest.json` by hand.
 
 ### Importing the samples
 
