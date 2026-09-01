@@ -272,7 +272,7 @@ Pool.Register(bulletPrefab, 20);
 var bullet = Pool.GetObj<Bullet>();
 ```
 
-**Injected** — register in your container:
+**Injected** — register once as a singleton in your root scope:
 
 ```csharp
 builder.Register<ISpawner, VContainerSpawner>(Lifetime.Singleton);
@@ -294,7 +294,7 @@ Everything in sections 1–5 is identical. Only these are not:
 | | Static | Injected |
 |---|---|---|
 | Install a spawner | `Pool.Spawner = new MySpawner();`<br>**set-once** — before the first `Register`/`GetObj`, or the setter throws | `new PoolSystem(new MySpawner())`, or register `ISpawner` in the container |
-| How many pools | exactly one, forever | as many as you like — e.g. one per child `LifetimeScope` |
+| How many pools | exactly one, forever | as many as you like — but **prefer one**, see below |
 | Reach the `PoolSystem` | `Pool.GetPoolSystem()` | you already hold it |
 | Cleanup | call `Pool.DestroyAllPools()` wherever you decide | same, but see below |
 
@@ -302,10 +302,19 @@ Everything in sections 1–5 is identical. Only these are not:
 singleton, locks in static mode and can throw — none of which should fire because a debugger
 evaluated a property on hover.
 
-### Injected pools need scope teardown
+### Prefer a single pool
 
-Each `PoolSystem` owns its own `DontDestroyOnLoad` root, and nothing disposes it for you. Recreate
-a scope without cleaning up and you strand an unreachable one every time:
+Nothing in this package frees a pool for you — that is your call, by design. So every extra
+`PoolSystem` is one more thing you have to remember to destroy, and each owns its own
+`DontDestroyOnLoad` root that outlives the scope that created it.
+
+**Register it once as a singleton in the root scope** (`Lifetime.Singleton` above, or whatever your
+container calls it) and you have exactly one pool to reason about — the same shape the static mode
+gives you, minus the global.
+
+Reach for a second instance only when you actually want a separate lifetime: a pool you intend to
+destroy along with its scope. Then teardown is on you, and skipping it strands an unreachable root
+every time the scope is recreated:
 
 ```csharp
 protected override void OnDestroy()
